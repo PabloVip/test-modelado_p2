@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulacro de Examen — Modelado del Software · UCAM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #1a1917;
+  --surface: #221f1c;
+  --surface2: #2a2724;
+  --border: #3a3733;
+  --text: #e8e3dc;
+  --text-muted: #9a9590;
+  --text-faint: #5a5753;
+  --accent: #e8574a;
+  --accent2: #f0a500;
+  --green: #4caf82;
+  --red: #e8574a;
+  --blue: #5b9bd5;
+  --tag-t5: #5b9bd5;
+  --tag-t6: #7c6fcd;
+  --tag-t7: #d4a017;
+  --tag-t8: #4caf82;
+  --tag-prof: #e84a8a;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Inter', sans-serif;
+}
+[data-theme="light"] {
+  --bg: #f5f2ed;
+  --surface: #faf8f5;
+  --surface2: #ffffff;
+  --border: #ddd9d3;
+  --text: #1a1714;
+  --text-muted: #6b6560;
+  --text-faint: #b5b0aa;
+  --accent: #d44035;
+  --accent2: #c98a00;
+  --green: #2e8a5a;
+  --red: #d44035;
+  --blue: #2e6db4;
+  --tag-t5: #2e6db4;
+  --tag-t6: #5d4fb0;
+  --tag-t7: #a07200;
+  --tag-t8: #2e8a5a;
+  --tag-prof: #c0336b;
+}
+html { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100dvh; scroll-behavior: smooth; }
+body { min-height: 100dvh; }
+
+/* HEADER */
+.header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 24px 32px 20px;
+  text-align: center;
+  position: relative;
+}
+.header-title { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 12px; }
+.header-sub { color: var(--text-muted); font-size: 0.85rem; margin-top: 4px; letter-spacing: 0.08em; text-transform: uppercase; }
+.theme-toggle { position: absolute; right: 24px; top: 24px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; cursor: pointer; color: var(--text-muted); font-size: 0.85rem; transition: all 0.18s; }
+.theme-toggle:hover { color: var(--text); border-color: var(--text-muted); }
+
+/* STATS BAR */
+.stats-bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+.stat { text-align: center; }
+.stat-num { font-size: 1.6rem; font-weight: 700; font-family: var(--mono); line-height: 1; }
+.stat-label { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-faint); margin-top: 2px; }
+.stat-num.answered { color: var(--text); }
+.stat-num.correct { color: var(--green); }
+.stat-num.wrong { color: var(--red); }
+.stat-num.pct { color: var(--accent2); }
+
+.progress-bar-wrap { flex: 1; min-width: 200px; max-width: 400px; height: 6px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+.progress-bar-fill { height: 100%; background: var(--green); border-radius: 99px; transition: width 0.4s ease; width: 0%; }
+
+/* TOOLBAR */
+.toolbar {
+  background: var(--bg);
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+.toolbar-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); margin-right: 4px; }
+.filter-btn {
+  padding: 6px 14px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--sans);
+}
+.filter-btn:hover { border-color: var(--text-muted); color: var(--text); }
+.filter-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+.toolbar-right { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.action-btn {
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--sans);
+  display: flex; align-items: center; gap: 6px;
+}
+.action-btn:hover { color: var(--text); border-color: var(--text-muted); }
+.action-btn.show-sol { background: color-mix(in oklch, var(--accent2) 15%, var(--surface)); border-color: var(--accent2); color: var(--accent2); }
+.action-btn.show-sol.active { background: var(--accent2); color: #000; }
+
+/* CONTENT */
+.content { max-width: 860px; margin: 0 auto; padding: 32px 24px 80px; }
+
+/* SECTION HEADER */
+.section-header {
+  display: flex; align-items: center; gap: 12px;
+  margin: 40px 0 20px;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.section-header::before, .section-header::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+.section-header span { white-space: nowrap; }
+
+/* QUESTION CARD */
+.question-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 16px;
+  transition: border-color 0.2s;
+}
+.question-card.answered-correct { border-color: color-mix(in oklch, var(--green) 40%, var(--border)); }
+.question-card.answered-wrong { border-color: color-mix(in oklch, var(--red) 40%, var(--border)); }
+
+.q-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.q-num {
+  width: 28px; height: 28px; border-radius: 6px;
+  background: var(--surface2); border: 1px solid var(--border);
+  font-size: 0.72rem; font-weight: 600; color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); flex-shrink: 0;
+}
+.q-tag {
+  padding: 3px 10px; border-radius: 99px;
+  font-size: 0.68rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.tag-t5 { background: color-mix(in oklch, var(--tag-t5) 20%, transparent); color: var(--tag-t5); border: 1px solid color-mix(in oklch, var(--tag-t5) 40%, transparent); }
+.tag-t6 { background: color-mix(in oklch, var(--tag-t6) 20%, transparent); color: var(--tag-t6); border: 1px solid color-mix(in oklch, var(--tag-t6) 40%, transparent); }
+.tag-t7 { background: color-mix(in oklch, var(--tag-t7) 20%, transparent); color: var(--tag-t7); border: 1px solid color-mix(in oklch, var(--tag-t7) 40%, transparent); }
+.tag-t8 { background: color-mix(in oklch, var(--tag-t8) 20%, transparent); color: var(--tag-t8); border: 1px solid color-mix(in oklch, var(--tag-t8) 40%, transparent); }
+.tag-prof { background: color-mix(in oklch, var(--tag-prof) 20%, transparent); color: var(--tag-prof); border: 1px solid color-mix(in oklch, var(--tag-prof) 40%, transparent); }
+.q-status-icon { margin-left: auto; font-size: 1rem; }
+
+.q-text { font-size: 0.97rem; line-height: 1.6; font-weight: 500; margin-bottom: 16px; color: var(--text); }
+
+/* UML DIAGRAM HINT */
+.q-diagram {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 16px 20px; margin-bottom: 16px; font-family: var(--mono); font-size: 0.8rem;
+  color: var(--text-muted); line-height: 1.5; overflow-x: auto;
+}
+.q-diagram-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); margin-bottom: 8px; }
+
+/* OPTIONS */
+.options { display: flex; flex-direction: column; gap: 8px; }
+.option {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 16px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--surface2);
+  cursor: pointer; transition: all 0.15s;
+  font-size: 0.9rem; line-height: 1.5; color: var(--text-muted);
+}
+.option:hover:not(.disabled) { border-color: var(--text-muted); color: var(--text); background: color-mix(in oklch, var(--text) 4%, var(--surface2)); }
+.option .opt-letter {
+  min-width: 22px; height: 22px; border-radius: 4px;
+  background: var(--surface); border: 1px solid var(--border);
+  font-size: 0.72rem; font-weight: 700; color: var(--text-faint);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); flex-shrink: 0; transition: all 0.15s; margin-top: 1px;
+}
+.option.selected { border-color: var(--blue); background: color-mix(in oklch, var(--blue) 10%, var(--surface2)); color: var(--text); }
+.option.selected .opt-letter { background: var(--blue); border-color: var(--blue); color: #fff; }
+.option.correct { border-color: var(--green); background: color-mix(in oklch, var(--green) 12%, var(--surface2)); color: var(--text); }
+.option.correct .opt-letter { background: var(--green); border-color: var(--green); color: #fff; }
+.option.wrong { border-color: var(--red); background: color-mix(in oklch, var(--red) 12%, var(--surface2)); color: var(--text); }
+.option.wrong .opt-letter { background: var(--red); border-color: var(--red); color: #fff; }
+.option.reveal-correct { border-color: color-mix(in oklch, var(--green) 50%, var(--border)); }
+.option.reveal-correct .opt-letter { color: var(--green); border-color: var(--green); }
+.option.disabled { cursor: default; }
+
+/* EXPLANATION */
+.explanation {
+  margin-top: 14px; padding: 12px 16px;
+  background: color-mix(in oklch, var(--accent2) 8%, var(--surface2));
+  border-left: 3px solid var(--accent2);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;
+  display: none;
+}
+.explanation.visible { display: block; }
+.explanation strong { color: var(--text); }
+
+/* HIDDEN */
+.question-card.hidden { display: none; }
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+  .toolbar { padding: 12px 16px; }
+  .content { padding: 20px 14px 60px; }
+  .stats-bar { gap: 20px; padding: 14px 16px; }
+  .header { padding: 20px 16px 16px; }
+  .question-card { padding: 18px; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-title">🎯 <span>Simulacro de Examen</span></div>
+  <div class="header-sub">Modelado del Software &middot; UCAM &middot; Temas 5, 6, 7 (Intro) y 8</div>
+  <button class="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">☀ Tema</button>
+</header>
+
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-num answered" id="stat-answered">0</div>
+    <div class="stat-label">Respondidas</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num correct" id="stat-correct">0</div>
+    <div class="stat-label">Correctas</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num wrong" id="stat-wrong">0</div>
+    <div class="stat-label">Errores</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num pct" id="stat-pct">0%</div>
+    <div class="stat-label">Acierto</div>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progress-fill"></div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <span class="toolbar-label">Filtrar:</span>
+  <button class="filter-btn active" onclick="filterBy('all', this)">Todas</button>
+  <button class="filter-btn" onclick="filterBy('t5', this)">Tema 5</button>
+  <button class="filter-btn" onclick="filterBy('t6', this)">Tema 6</button>
+  <button class="filter-btn" onclick="filterBy('t7', this)">Tema 7</button>
+  <button class="filter-btn" onclick="filterBy('t8', this)">Tema 8</button>
+  <button class="filter-btn" onclick="filterBy('prof', this)">Simulacro Profesora</button>
+  <div class="toolbar-right">
+    <button class="action-btn show-sol" id="btn-sol" onclick="toggleSolutions()">👁 Mostrar soluciones</button>
+    <button class="action-btn" onclick="shuffleQuestions()">🔀 Mezclar preguntas</button>
+    <button class="action-btn" onclick="shuffleAnswers()">🔀 Mezclar respuestas</button>
+    <button class="action-btn" onclick="resetAll()">↺ Reiniciar todo</button>
+  </div>
+</div>
+
+<main class="content" id="quiz-container">
+  <!-- Questions injected by JS -->
+</main>
+
+<script>
+const QUESTIONS = [
+// ═══════════════════════════════════════════
+// TEMA 5 — MODELADO DE COMPORTAMIENTO
+// ═══════════════════════════════════════════
+{id:1,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'¿Qué tipo de diagramas se usan para modelar el comportamiento dinámico orientado a eventos de un objeto?',
+opts:['Diagramas de secuencia','Diagramas de estados','Diagramas de actividades','Diagramas de componentes'],
+ans:1,
+exp:'Los diagramas de estados están orientados a eventos y modelan el comportamiento de objetos reactivos a lo largo de su ciclo de vida.'},
+
+{id:2,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'¿Qué tipo de diagramas se usan para modelar el comportamiento dinámico orientado a actividades?',
+opts:['Diagramas de estados','Diagramas de clases','Diagramas de actividades','Diagramas de despliegue'],
+ans:2,
+exp:'Los diagramas de actividades están orientados a actividades y capturan el flujo de trabajo paso a paso.'},
+
+{id:3,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'¿Cómo se define un evento en el contexto del modelado de comportamiento?',
+opts:['Una clase con atributos y operaciones','Un acontecimiento significativo ubicado en el tiempo y en el espacio','Una relación entre dos objetos','Un conjunto de actividades secuenciales'],
+ans:1,
+exp:'Un evento es un acontecimiento significativo, ubicado en el tiempo y en el espacio, que actúa como estímulo para hacer cambiar el estado de una clase.'},
+
+{id:4,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'¿Cuáles son los dos tipos de eventos según su temporalidad (sincronía)?',
+opts:['Externos e internos','Síncronos y asíncronos','Señales y llamadas','Simples y compuestos'],
+ans:1,
+exp:'Los eventos pueden ser síncronos (llamadas/invocación de operaciones) o asíncronos (señales, paso de tiempo, cambio de estado).'},
+
+{id:5,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'¿Cómo se modela una señal en UML?',
+opts:['Como una clase con el estereotipo &lt;&lt;signal&gt;&gt;','Como una flecha con nombre de evento','Como un nodo de actividad especial','Como un estado con acción entry'],
+ans:0,
+exp:'Las señales se modelan como clases estereotipadas &lt;&lt;signal&gt;&gt;. Para indicar que una operación envía una señal se usa la dependencia estereotipada &lt;&lt;send&gt;&gt;.'},
+
+{id:6,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'Un evento llamada es típicamente:',
+opts:['Asíncrono, no espera resultado','Síncrono, espera resultado de la operación','Solo para creación de objetos','Solo para paso de mensajes entre actores'],
+ans:1,
+exp:'El evento llamada representa la invocación de una operación de un objeto y suele ser síncrono (espera el resultado de la operación).'},
+
+{id:7,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'¿Cuáles son los dos casos especiales del evento llamada?',
+opts:['Envío y recepción','Creación &lt;&lt;create&gt;&gt; y destrucción &lt;&lt;destroy&gt;&gt; de un objeto','Tiempo y cambio de estado','Señal y guarda'],
+ans:1,
+exp:'Los dos casos especiales del evento llamada son la creación (&lt;&lt;create&gt;&gt;) y la destrucción (&lt;&lt;destroy&gt;&gt;) de un objeto.'},
+
+{id:8,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'¿Cuál es la notación de un evento de tiempo relativo que se dispara después de un período?',
+opts:['at(tiempo)','when(tiempo)','after(tiempo)','on(tiempo)'],
+ans:2,
+exp:'Para tiempos relativos se usa after<valor temporal>, por ejemplo: after(2 segundos). Para tiempos absolutos se usa at<valor temporal>.'},
+
+{id:9,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'¿Cuál es la notación de un evento de cambio en UML?',
+opts:['after(expresion)','when(expresionBooleana)','at(expresion)','on(condicion)'],
+ans:1,
+exp:'El evento de cambio usa la notación When(<expresión booleana>) y ocurre una vez cuando el valor de la expresión cambia de falso a verdadero.'},
+
+{id:10,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'Los eventos de tipo cambio o tiempo son de uso:',
+opts:['Global en todo el sistema','Local en un objeto','Compartido entre dos objetos','Exclusivo de actores externos'],
+ans:1,
+exp:'Los eventos de tipo cambio o tiempo son de uso local en un objeto. Los eventos señal o llamada implican al menos dos objetos (emisor y receptor).'},
+
+{id:11,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'¿Qué es una máquina de estados?',
+opts:['Una secuencia de actividades paralelas','La secuencia de estados por los que pasa un objeto a lo largo de su vida como consecuencia de procesar eventos','Un conjunto de clases relacionadas entre sí','Un diagrama de casos de uso extendido'],
+ans:1,
+exp:'Una máquina de estados modela la secuencia de estados por los que pasa un objeto a lo largo de su vida como consecuencia de procesar los eventos que recibe.'},
+
+{id:12,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'¿Qué tipo de objetos modelan mejor las máquinas de estados?',
+opts:['Objetos pasivos sin historia','Objetos reactivos con memoria y ciclo de vida bien definido','Objetos de solo lectura','Objetos sin eventos externos'],
+ans:1,
+exp:'Las máquinas de estados son la mejor forma de especificar el comportamiento de objetos reactivos: responden a eventos, tienen memoria (comportamiento dependiente de la historia) y un ciclo de vida bien definido.'},
+
+{id:13,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'¿Cómo tiene forma una máquina de estados?',
+opts:['Una lista jerárquica','Un grafo dirigido con distintos tipos de arcos y nodos','Una tabla de decisión','Un árbol de llamadas'],
+ans:1,
+exp:'Una máquina de estados tiene forma de grafo dirigido donde los nodos representan los estados y los arcos representan las transiciones entre dichos estados.'},
+
+{id:14,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'Un estado en un diagrama de estados representa:',
+opts:['La ejecución de una operación atómica','Una condición o situación en la vida de un objeto en la que permanece un tiempo finito','Una relación de dependencia entre dos clases','Una señal enviada por un actor'],
+ans:1,
+exp:'Un estado es una condición o situación en la vida de un objeto. Un objeto permanece en un estado un tiempo finito, y en él hace alguna actividad o espera algún evento.'},
+
+{id:15,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'¿Cuáles son los componentes de una transición?',
+opts:['Nombre, tipo, visibilidad y alcance','Estado origen/destino, evento disparo, condición de guarda y acción','Solo el evento y el estado destino','Acción, actividad y estado final'],
+ans:1,
+exp:'Una transición consta de: estado origen/destino, evento disparo (provoca el disparo de la transición), condición de guarda (expresión booleana) y acción (comportamiento ejecutable).'},
+
+{id:16,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'¿Qué representa una bifurcación en un diagrama de actividades?',
+opts:['La sincronización de flujos concurrentes','Caminos alternativos en función de una expresión booleana, representada como un rombo','La separación en flujos paralelos','Un punto de unión de varias actividades'],
+ans:1,
+exp:'Una bifurcación representa caminos alternativos en función de una expresión booleana. Gráficamente se representa como un rombo con un flujo de entrada y dos o más de salida, cada uno con una guarda.'},
+
+{id:17,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'Una fusión en un diagrama de actividades:',
+opts:['Separa flujos en paralelo','Tiene varias entradas y una única salida, sin guardas','Crea nuevas instancias de objetos','Detiene la ejecución del flujo'],
+ans:1,
+exp:'Una fusión tiene varias entradas y una única salida, y a diferencia de la bifurcación, aquí no hay guardas. Los caminos antes separados se vuelven a juntar.'},
+
+{id:18,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'¿Qué representa una División (fork) en un diagrama de actividades?',
+opts:['La alternativa entre dos caminos','La separación de un flujo de control en dos o más flujos concurrentes','La unión de flujos para sincronizarlos','Un nodo de decisión con condición de guarda'],
+ans:1,
+exp:'Una División representa la separación de un flujo de control sencillo en dos o más flujos de control concurrentes.'},
+
+{id:19,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'Una Unión (join) en un diagrama de actividades:',
+opts:['Selecciona el camino más rápido','Sincroniza dos o más flujos; el flujo continúa cuando todos los flujos de entrada han alcanzado la unión','Divide el flujo en paralelos','Es equivalente a una bifurcación'],
+ans:1,
+exp:'Una Unión sincroniza dos o más flujos de control concurrentes. El flujo continúa únicamente cuando todos los flujos de entrada han alcanzado la unión.'},
+
+{id:20,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'¿Qué son las calles (swimlanes) en un diagrama de actividades?',
+opts:['Divisiones de tiempo para las actividades','Agrupaciones de flujos de procesos que representan una responsabilidad de alto nivel; las transiciones pueden cruzarlas','Tipos especiales de bifurcaciones','Particiones para indicar prioridades'],
+ans:1,
+exp:'Las calles son agrupaciones de flujos de procesos y cada calle representa una responsabilidad de alto nivel de la actividad. Las transiciones pueden cruzar las calles.'},
+
+{id:21,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'¿Para qué tipo de objeto es preferible usar un diagrama de estados?',
+opts:['Para modelar flujos de trabajo complejos con varias personas','Para modelar objetos reactivos cuyo comportamiento depende de los eventos','Para modelar la distribución física del sistema','Para modelar relaciones entre paquetes'],
+ans:1,
+exp:'Los diagramas de estados son preferibles para modelar objetos reactivos, cuyos aspectos dinámicos involucran comportamiento dirigido por eventos.'},
+
+{id:22,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'¿Para qué es preferible usar un diagrama de actividades?',
+opts:['Para modelar objetos reactivos','Para modelar un flujo de trabajo o una operación que involucra diversos clasificadores','Para modelar la arquitectura física de despliegue','Para describir la jerarquía de clases'],
+ans:1,
+exp:'Los diagramas de actividades son preferibles para modelar aspectos dinámicos de una actividad que puede involucrar diversos clasificadores en el sistema, como flujos de trabajo u operaciones.'},
+
+{id:23,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'¿Qué es una acción en un diagrama de actividades?',
+opts:['Una agrupación de nodos de actividad','Una computación ejecutable y atómica que no se descompone ni ejecuta por partes','Un flujo concurrente de control','Una condición de guarda evaluada en tiempo de ejecución'],
+ans:1,
+exp:'Una acción es una computación ejecutable y atómica. No se descompone ni ejecuta por partes. Ejemplos: llamadas a operaciones, envío de señales, creación/destrucción de objetos, cálculos.'},
+
+{id:24,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'¿Qué diferencia un nodo de actividad de una acción?',
+opts:['Un nodo de actividad es atómico; la acción tiene estructura interna','Una acción es atómica; un nodo de actividad puede tener estructura interna y agrupar acciones','Solo se diferencian en la notación gráfica','No hay diferencia conceptual'],
+ans:1,
+exp:'Una acción es atómica (nodo de actividad atómico), mientras que un nodo de actividad puede tener estructura interna (agrupación de acciones). Gráficamente no se diferencian: usar anotaciones para distinguirlos.'},
+
+{id:25,tema:'t5',section:'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+q:'Los diagramas de actividades son el equivalente en OO de:',
+opts:['Los diagramas de secuencia y comunicación','Los diagramas de flujo (flowcharts) y DFDs','Los diagramas de componentes','Los diagramas de paquetes'],
+ans:1,
+exp:'Los diagramas de actividades son el equivalente en OO a los diagramas de flujo y DFDs (Data Flow Diagrams).'},
+
+// ═══════════════════════════════════════════
+// TEMA 6 — MODELADO DE ARQUITECTURA
+// ═══════════════════════════════════════════
+{id:26,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Cuáles son los dos niveles del modelo de arquitectura de software?',
+opts:['Estático y dinámico','Lógico y físico','Abstracto y concreto','Interno y externo'],
+ans:1,
+exp:'El modelado de arquitectura tiene dos niveles: lógico (componentes lógicos y relaciones) y físico (componentes físicos que conforman el sistema software).'},
+
+{id:27,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Qué describe el nivel lógico de la arquitectura?',
+opts:['Los nodos de hardware donde se despliega el software','Los componentes lógicos (subsistemas, funciones) y la relación entre ellos','Los artefactos físicos y ejecutables del sistema','Los protocolos de comunicación de red'],
+ans:1,
+exp:'El nivel lógico expresa cuáles son los componentes lógicos (subsistemas, funciones, etc.) que componen el sistema y la relación entre ellos.'},
+
+{id:28,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Cuál es el elemento de organización principal en UML para manejar modelos grandes?',
+opts:['La clase','El paquete','El componente','El nodo'],
+ans:1,
+exp:'En UML, el elemento de organización es el paquete. Es un elemento para organizar, aunque no tiene identidad propia (no hay instancias de paquetes).'},
+
+{id:29,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Qué permite un paquete en UML?',
+opts:['Crear instancias de los elementos que contiene','Organizar elementos de los modelos y controlar el acceso a sus contenidos','Ejecutar operaciones en tiempo de ejecución','Definir tipos primitivos del sistema'],
+ans:1,
+exp:'Los paquetes permiten organizar elementos de los modelos y controlar el acceso a sus contenidos. También pueden dar lugar a estructuras recursivas.'},
+
+{id:30,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Puede un paquete contener a otro paquete?',
+opts:['No, solo contiene clases e interfaces','Sí, pueden darse estructuras recursivas','Solo si son del mismo dominio de aplicación','Solo a través de una relación de herencia'],
+ans:1,
+exp:'Los paquetes pueden darse estructuras recursivas donde un paquete incluye a otro paquete. También pueden contenerse en cualquier tipo de diagrama.'},
+
+{id:31,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Qué es un namespace (espacio de nombres) en el contexto de paquetes UML?',
+opts:['Un paquete que no tiene contenido visible','Un paquete en el que no puede haber dos elementos del mismo tipo con el mismo nombre','Una relación de importación entre paquetes','Un tipo especial de diagrama de secuencia'],
+ans:1,
+exp:'Un paquete forma un espacio de nombres (namespace): no puede haber dentro de un paquete dos elementos del mismo tipo con el mismo nombre. Por ejemplo, no puede haber dos clases "Persona" en el mismo paquete.'},
+
+{id:32,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'La visibilidad "pública" (+) de un elemento en un paquete significa que:',
+opts:['Solo es visible dentro del paquete que lo contiene','El elemento está disponible a otros elementos del paquete contenedor y a paquetes que importan el paquete','Solo lo pueden ver los paquetes hijo','No puede ser referenciado con nombre cualificado'],
+ans:1,
+exp:'Un elemento público (+) está disponible a otros elementos del paquete contenedor o uno de sus paquetes anidados, y a paquetes que importan el paquete contenedor.'},
+
+{id:33,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'La visibilidad "privada" (-) de un elemento en un paquete significa que:',
+opts:['Es visible desde cualquier paquete que lo importe','El elemento no está disponible fuera del paquete contenedor','Solo lo ven los paquetes con relación de generalización','Es equivalente a la visibilidad pública'],
+ans:1,
+exp:'La visibilidad privada (-) significa que el elemento no está disponible fuera del paquete contenedor.'},
+
+{id:34,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Cuáles son los dos tipos de relaciones entre paquetes en UML?',
+opts:['Composición y agregación','Generalización y Dependencia','Herencia y Realización','Asociación y Multiplicidad'],
+ans:1,
+exp:'Los paquetes interactúan de dos formas: Generalización (el paquete especializado puede usarse en sustitución del general) y Dependencia (un elemento de un paquete depende de elementos de otro).'},
+
+{id:35,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Qué diferencia hay entre &lt;&lt;import&gt;&gt; y &lt;&lt;access&gt;&gt; en una dependencia entre paquetes?',
+opts:['&lt;&lt;import&gt;&gt; es privado y &lt;&lt;access&gt;&gt; es público','&lt;&lt;import&gt;&gt; incorpora el espacio de nombres (no hace falta cualificar nombres); &lt;&lt;access&gt;&gt; permite acceder al espacio sin incorporarlo (hay que cualificar nombres)','Son equivalentes, solo cambia el nombre','&lt;&lt;access&gt;&gt; es para herencia y &lt;&lt;import&gt;&gt; para composición'],
+ans:1,
+exp:'&lt;&lt;import&gt;&gt; incorpora el espacio de nombres del paquete fuente en el destino (no hace falta cualificar nombres). &lt;&lt;access&gt;&gt; permite acceder al espacio de nombres sin llegar a incorporar sus elementos (los elementos accedidos se indican con su nombre cualificado).'},
+
+{id:36,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Son transitivas las relaciones de permiso entre paquetes (import/access)?',
+opts:['Sí, si A importa B y B importa C, A puede usar C','No, las relaciones de permiso NO son transitivas ni simétricas','Sí, pero solo la relación &lt;&lt;import&gt;&gt;','Solo si se declara explícitamente'],
+ans:1,
+exp:'Las relaciones de permiso NO son transitivas ni simétricas. Si Pq1 puede acceder a Pq2 y Pq2 a Pq3, Pq1 no puede acceder a Pq3, ni Pq2 a Pq1.'},
+
+{id:37,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Cuántos niveles de anidamiento se recomienda para los paquetes?',
+opts:['Máximo 1 nivel','Máximo 2 niveles','Máximo 3 niveles','Sin límite de niveles'],
+ans:2,
+exp:'Se recomienda que los paquetes no estén muy anidados (máximo 3 niveles) y que posean un conjunto equilibrado de elementos (5-9 nodos).'},
+
+{id:38,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Qué caracteriza a un paquete bien estructurado según las recomendaciones?',
+opts:['Tiene muchas relaciones de dependencia salientes','Es cohesivo (límite bien definido alrededor de elementos relacionados) y está poco acoplado (importa lo necesario y exporta solo lo que otros necesitan)','Tiene tantos elementos como sea posible','Siempre está anidado en otro paquete principal'],
+ans:1,
+exp:'Un paquete bien estructurado es cohesivo (proporciona un límite bien definido alrededor de un grupo de elementos relacionados) y está poco acoplado (importa lo realmente necesario y exporta solo los elementos que otros paquetes necesitan ver).'},
+
+{id:39,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Qué es un componente en la arquitectura física UML?',
+opts:['Un elemento abstracto de análisis sin implementación','Una parte física de un sistema que conforma y proporciona la implementación de un conjunto de interfaces; unidad reemplazable','Un tipo de actor en un diagrama de casos de uso','Un diagrama especial para representar actividades concurrentes'],
+ans:1,
+exp:'Un componente es la parte física de un sistema que conforma y proporciona la implementación de un conjunto de interfaces. Es una unidad reemplazable por otro componente que ofrezca la misma funcionalidad.'},
+
+{id:40,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Cuál es la diferencia principal entre una clase y un componente?',
+opts:['Las clases no tienen operaciones; los componentes sí','Las clases son abstracciones lógicas con atributos y operaciones; los componentes son fragmentos físicos del sistema con interfaces','Los componentes son más simples que las clases','Las clases pueden implementar múltiples interfaces; los componentes no'],
+ans:1,
+exp:'Las clases son abstracciones lógicas con operaciones y atributos. Los componentes son fragmentos físicos del sistema con interfaces (no tienen atributos, solo operaciones accesibles a través de sus interfaces).'},
+
+{id:41,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Qué es un puerto en un componente UML?',
+opts:['Una relación de generalización entre componentes','Una ventana específica de un componente encapsulado que acepta mensajes hacia y desde el componente','Un artefacto ejecutable en un nodo','Una parte (part) del componente que define un rol'],
+ans:1,
+exp:'Un puerto es una ventana específica de un componente encapsulado que acepta mensajes hacia y desde el componente, conformes con las interfaces especificadas.'},
+
+{id:42,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Qué describe un diagrama de componentes?',
+opts:['La secuencia de mensajes entre objetos','Los elementos físicos del sistema y sus relaciones; cubre la vista de implementación estática','Los casos de uso del sistema con sus actores','La distribución de nodos de hardware en la red'],
+ans:1,
+exp:'Un diagrama de componentes muestra un conjunto de componentes y sus relaciones. Describe los elementos físicos del sistema y sus relaciones. Cubre la vista de implementación estática de un sistema.'},
+
+{id:43,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Qué es un nodo en UML?',
+opts:['Una operación de un componente','Un recurso hardware o software en el que puede residir el software ejecutable; elemento físico en tiempo de ejecución','Un tipo de relación entre paquetes','Un estereotipo aplicado a una clase'],
+ans:1,
+exp:'Un nodo se usa para representar un recurso hardware o software en el que puede residir el software ejecutable. Es un elemento físico que existe en tiempo de ejecución y se emplea para modelar la topología del hardware.'},
+
+{id:44,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Cuál es la notación gráfica de un nodo en UML?',
+opts:['Un rectángulo con icono especial en la esquina superior derecha','Un cubo tridimensional','Un óvalo con nombre','Un rombo con texto en su interior'],
+ans:1,
+exp:'Gráficamente, un nodo se representa como un cubo.'},
+
+{id:45,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Cuál es la diferencia entre nodo y componente?',
+opts:['Son equivalentes, solo cambia el nombre','Los componentes son los elementos que participan en la ejecución; los nodos son donde se ejecutan los componentes','Los nodos tienen atributos; los componentes no','Los componentes son hardware; los nodos son software'],
+ans:1,
+exp:'Los componentes son los elementos que participan en la ejecución de un sistema; los nodos son los elementos donde se ejecutan los componentes. Los componentes representan el empaquetamiento físico; los nodos representan el despliegue físico.'},
+
+{id:46,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Qué es un artefacto en UML?',
+opts:['Un componente abstracto del análisis','Una implementación física de un conjunto de elementos lógicos (clases, componentes) que reside en nodos; son ficheros físicos','Un tipo de relación entre nodos','Un estereotipo aplicado a los actores'],
+ans:1,
+exp:'Un artefacto es la implementación física de un conjunto de elementos lógicos tales como clases y componentes. Los artefactos residen en nodos y son ficheros físicos que el software usa o ejecuta.'},
+
+{id:47,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Cuál es la diferencia entre artefacto y clase?',
+opts:['Las clases son elementos físicos; los artefactos son abstracciones lógicas','Las clases son abstracciones lógicas con atributos y operaciones; los artefactos son elementos físicos formados por bits, sin atributos ni operaciones','Son conceptualmente idénticos','Los artefactos pueden tener operaciones; las clases no'],
+ans:1,
+exp:'Las clases son abstracciones lógicas con atributos y operaciones. Los artefactos representan elementos físicos formados por bits; no pueden tener atributos y operaciones, pero implementan aspectos lógicos (clases, componentes).'},
+
+{id:48,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Qué estereotipo se usa para representar la relación entre un artefacto y la clase que implementa?',
+opts:['&lt;&lt;implements&gt;&gt;','&lt;&lt;manifest&gt;&gt;','&lt;&lt;deploy&gt;&gt;','&lt;&lt;artifact&gt;&gt;'],
+ans:1,
+exp:'La relación entre artefacto y las clases que implementa se representa mediante una relación de manifestación (&lt;&lt;manifest&gt;&gt;).'},
+
+{id:49,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Cuáles son los tres tipos de artefactos según su ciclo de vida?',
+opts:['Ejecutable, fuente y datos','Producto de trabajo, despliegue y ejecución','Estático, dinámico y persistente','Interno, externo y compartido'],
+ans:1,
+exp:'Los tres tipos de artefactos son: Producto de trabajo (permanecen al final del proceso, ej: archivos de código fuente), Despliegue (forman parte del sistema ejecutable, ej: DLL, EXE) y Ejecución (se crean durante la ejecución, ej: objetos de datos en tiempo de ejecución).'},
+
+{id:50,tema:'t6',section:'TEMA 6 — MODELADO DE ARQUITECTURA',
+q:'¿Cuándo NO son necesarios los diagramas de despliegue?',
+opts:['Cuando el sistema está distribuido físicamente sobre varios procesadores','Cuando el software reside en una única máquina','Cuando se necesita razonar sobre la topología de procesadores','Cuando hay múltiples artefactos desplegados'],
+ans:1,
+exp:'Los diagramas de despliegue no son necesarios cuando el software reside en una única máquina. Son necesarios cuando el sistema está distribuido físicamente sobre varios procesadores.'},
+
+// ═══════════════════════════════════════════
+// TEMA 7 — PATRONES DE DISEÑO (SOLO INTRO)
+// ═══════════════════════════════════════════
+{id:51,tema:'t7',section:'TEMA 7 — PATRONES DE DISEÑO SOFTWARE (Introducción)',
+q:'¿Qué es un patrón de diseño software?',
+opts:['Una solución específica codificada para un problema particular','Una descripción de un problema que se repite a menudo y la solución general del mismo, reutilizable una y otra vez','Un diagrama UML que modela la estructura de clases','Un conjunto de pruebas unitarias para verificar el diseño'],
+ans:1,
+exp:'Un patrón es una solución probada que se puede aplicar con éxito a un determinado tipo de problemas que aparecen repetidamente. Es un esqueleto básico que cada diseñador adapta a las peculiaridades de su aplicación.'},
+
+{id:52,tema:'t7',section:'TEMA 7 — PATRONES DE DISEÑO SOFTWARE (Introducción)',
+q:'¿Quiénes propusieron los patrones de diseño GoF?',
+opts:['Kent Beck, Martin Fowler, Robert Martin y Ward Cunningham','Gamma, Helm, Johnson y Vlissides (Gang of Four)','Grady Booch, James Rumbaugh e Ivar Jacobson','Bertrand Meyer, Bjarne Stroustrup y Niklaus Wirth'],
+ans:1,
+exp:'Los patrones GoF fueron propuestos por Gamma, Helm, Johnson y Vlissides, conocidos como el "Gang of Four" (GoF), en el libro "Design Patterns: Elements of Reusable Object-Oriented Software" (Addison-Wesley, 1994).'},
+
+{id:53,tema:'t7',section:'TEMA 7 — PATRONES DE DISEÑO SOFTWARE (Introducción)',
+q:'¿Cuáles son los cuatro elementos principales de un patrón de diseño?',
+opts:['Nombre, Descripción, Código y Pruebas','Nombre, Problema, Solución y Consecuencias','Propósito, Estructura, Participantes y Colaboraciones','Tipo, Alcance, Motivación e Implementación'],
+ans:1,
+exp:'Los cuatro elementos principales de un patrón son: Nombre (descripción del problema en 1-2 palabras), Problema (cuándo aplicarlo), Solución (elementos, relaciones, responsabilidades) y Consecuencias (resultado de aplicarlo).'},
+
+{id:54,tema:'t7',section:'TEMA 7 — PATRONES DE DISEÑO SOFTWARE (Introducción)',
+q:'¿Cuáles son los tres tipos de patrones según su propósito?',
+opts:['Estructurales, de comportamiento y de despliegue','De creación, de estructura y de comportamiento','Abstractos, concretos y de interfaz','Estáticos, dinámicos y mixtos'],
+ans:1,
+exp:'Según el propósito (¿qué hace el patrón?), los patrones se clasifican en: De creación, De estructura y De comportamiento.'},
+
+{id:55,tema:'t7',section:'TEMA 7 — PATRONES DE DISEÑO SOFTWARE (Introducción)',
+q:'¿Cuáles son los dos ámbitos de clasificación de los patrones GoF?',
+opts:['Lógico y físico','De clases y de objetos','Abstracto y concreto','Estático y dinámico'],
+ans:1,
+exp:'Según el ámbito, los patrones se clasifican en: de clases y de objetos.'},
+
+{id:56,tema:'t7',section:'TEMA 7 — PATRONES DE DISEÑO SOFTWARE (Introducción)',
+q:'¿Cuál es una de las principales ventajas de usar patrones de diseño?',
+opts:['Aumentan el acoplamiento entre clases','Favorecen la reutilización a través de la composición en vez de la herencia','Eliminan la necesidad de documentación','Reducen la cantidad de clases necesarias'],
+ans:1,
+exp:'Los patrones de diseño favorecen la reutilización a través de la composición en vez de la herencia (reutilización "caja negra" vs "caja blanca"). También ayudan a determinar los objetos de una aplicación y especifican interfaces e implementaciones.'},
+
+{id:57,tema:'t7',section:'TEMA 7 — PATRONES DE DISEÑO SOFTWARE (Introducción)',
+q:'¿Qué es la delegación en el contexto de los patrones de diseño?',
+opts:['Una forma de herencia múltiple','Una forma de hacer que la composición sea tan potente como la herencia: un objeto receptor delega operaciones en su delegado','Un tipo especial de relación de dependencia entre paquetes','El proceso de instanciación a través de una factoría'],
+ans:1,
+exp:'La delegación es una forma de hacer que la composición sea tan potente como la herencia. Un objeto receptor delega operaciones en su delegado. Si una clase B quiere utilizar los métodos de A, puede declarar un atributo de A en B e invocar el método deseado.'},
+
+{id:58,tema:'t7',section:'TEMA 7 — PATRONES DE DISEÑO SOFTWARE (Introducción)',
+q:'La herencia representa un tipo de reuso llamado:',
+opts:['Reuso caja negra con relación variable','Reuso caja blanca con relación fija','Reuso por delegación con relación dinámica','Reuso por composición configurable'],
+ans:1,
+exp:'La herencia es reuso "caja blanca" con relación fija. La clientela (composición) es reuso "caja negra" con relación variable.'},
+
+{id:59,tema:'t7',section:'TEMA 7 — PATRONES DE DISEÑO SOFTWARE (Introducción)',
+q:'Los patrones de comportamiento basados en clases usan:',
+opts:['Composición de objetos','Herencia (Template Method e Interpreter)','Delegación exclusivamente','Reflexión y metaprogramación'],
+ans:1,
+exp:'Los patrones de comportamiento basados en clases usan la herencia: Template Method e Interpreter. Los basados en objetos usan la composición: Mediator, Observer, etc.'},
+
+{id:60,tema:'t7',section:'TEMA 7 — PATRONES DE DISEÑO SOFTWARE (Introducción)',
+q:'Los patrones de creación abstraen:',
+opts:['La forma en que las clases heredan unas de otras','El proceso de creación de objetos, ayudando a crear sistemas independientes de cómo los objetos son creados, compuestos y representados','El flujo de control entre actividades concurrentes','La estructura de paquetes en un sistema de gran tamaño'],
+ans:1,
+exp:'Los patrones de creación abstraen el proceso de creación de objetos. Ayudan a crear sistemas independientes de cómo los objetos son creados, compuestos y representados. El sistema solo conoce las clases abstractas.'},
+
+// ═══════════════════════════════════════════
+// TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA
+// ═══════════════════════════════════════════
+{id:61,tema:'t8',section:'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+q:'¿Cómo se define la reutilización de software?',
+opts:['Copiar código de un proyecto a otro sin modificaciones','Actividad o proceso que permite desarrollar un sistema a partir de algo procedente de algún esfuerzo de desarrollo anterior','El proceso de pruebas automáticas sobre código existente','La refactorización de código para mejorar su legibilidad'],
+ans:1,
+exp:'La reutilización es literalmente "volver a utilizar": actividad o proceso que permite desarrollar un sistema a partir de algo procedente de algún esfuerzo de desarrollo anterior.'},
+
+{id:62,tema:'t8',section:'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+q:'¿Cuál de las siguientes NO es una dificultad típica de la reutilización?',
+opts:['No existen planes de reutilización cuando se aborda un proyecto','Los programadores no emplean las herramientas ni las técnicas','La reutilización siempre aumenta el coste inicial del proyecto','Los clientes no siempre quieren afrontar el cambio'],
+ans:2,
+exp:'Las dificultades de la reutilización incluyen falta de planes, no uso de herramientas/técnicas, falta de información, resistencia al cambio y clientes que no quieren el cambio. "Siempre aumenta el coste" no es una dificultad listada sino una afirmación incorrecta.'},
+
+{id:63,tema:'t8',section:'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+q:'Para que un componente sea reutilizable debe:',
+opts:['Estar implementado en un lenguaje específico','Ser lo más general posible para poder emplearse en una aplicación distinta de la actual','Estar completamente documentado en formato PDF','Estar libre de dependencias externas'],
+ans:1,
+exp:'Para que un componente sea reutilizable tiene que ser lo más general posible para que pueda emplearse en una aplicación distinta de la actual.'},
+
+{id:64,tema:'t8',section:'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+q:'¿Cuál de los siguientes elementos NO se puede reutilizar?',
+opts:['Planes de proyecto','Estimaciones de coste','El proceso de pensamiento del desarrollador individual','Casos de prueba'],
+ans:2,
+exp:'Se pueden reutilizar: planes de proyecto, estimaciones de coste, arquitectura de datos, especificaciones y modelos de requisitos, diseños, código fuente, documentación, interfaces humanas, datos y casos de prueba. El "proceso de pensamiento individual" no es un artefacto reutilizable.'},
+
+{id:65,tema:'t8',section:'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+q:'¿Qué es la ingeniería de dominio?',
+opts:['La ingeniería de software aplicada a un dominio de negocio específico','El proceso que identifica, construye, cataloga y disemina un conjunto de elementos software reutilizables en un determinado dominio de aplicación','El análisis de requisitos para sistemas heredados','La reescritura completa de un sistema antiguo'],
+ans:1,
+exp:'La ingeniería de dominio efectúa el trabajo necesario para establecer un conjunto de elementos software reutilizables. Identifica, construye, cataloga y disemina un conjunto de elementos software que tienen aplicación dentro de un determinado dominio.'},
+
+{id:66,tema:'t8',section:'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+q:'¿Cuáles son las tres tareas principales de la ingeniería de dominio?',
+opts:['Análisis de requisitos, diseño y codificación','Análisis del dominio, construcción de componentes y clasificación/recuperación de componentes','Planificación, ejecución y prueba','Documentación, despliegue y mantenimiento'],
+ans:1,
+exp:'Las tres tareas principales de la ingeniería de dominio son: Análisis del dominio, Construcción de componentes y Clasificación y recuperación de componentes.'},
+
+{id:67,tema:'t8',section:'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+q:'¿Qué propone el Modelo 3C de Tracz para la clasificación de componentes?',
+opts:['Código, Calidad y Compatibilidad','Concepto (qué hace), Contenido (cómo se consigue) y Contexto (dominio de aplicabilidad)','Clase, Componente y Conector','Cohesión, Consistencia y Cobertura'],
+ans:1,
+exp:'El Modelo 3C de Tracz propone describir los componentes mediante: Concepto (descripción de lo que hace), Contenido (cómo se consigue el concepto) y Contexto (dominio de aplicabilidad del componente).'},
+
+{id:68,tema:'t8',section:'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+q:'¿Para qué se usan los patrones de diseño en el contexto de la reutilización?',
+opts:['Para gestionar la configuración del software','Para reutilizar el diseño: describen un problema que se repite y ofrecen una solución general aplicable repetidamente','Para automatizar las pruebas de regresión','Para documentar los requisitos no funcionales'],
+ans:1,
+exp:'Los patrones de diseño representan reutilización del diseño: son la descripción de un problema que se repite a menudo y la solución general del mismo, de forma que puede emplearse esta solución una y otra vez.'},
+
+{id:69,tema:'t8',section:'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+q:'¿Cómo se define la Reingeniería de software?',
+opts:['El proceso de pruebas para verificar la corrección del software existente','Un mecanismo para evaluar, controlar y realizar modificaciones sobre aplicaciones "veteranas"','La migración de datos entre bases de datos antiguas y nuevas','El proceso de creación de documentación para código no documentado'],
+ans:1,
+exp:'La Reingeniería es un mecanismo para evaluar, controlar y realizar modificaciones sobre aplicaciones "veteranas". Es una tarea de reconstrucción que requiere tiempo, dinero y recursos.'},
+
+{id:70,tema:'t8',section:'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+q:'¿Cuáles son las seis etapas del proceso de reingeniería?',
+opts:['Análisis, Diseño, Implementación, Prueba, Despliegue y Mantenimiento','Análisis de inventario, Reconstrucción de documentos, Ingeniería inversa, Reestructuración de código, Reestructuración de datos e Ingeniería progresiva','Planificación, Estimación, Modelado, Construcción, Despliegue y Seguimiento','Recolección de requisitos, Análisis, Diseño, Prueba, Entrega y Revisión'],
+ans:1,
+exp:'El proceso de reingeniería tiene seis etapas cíclicas: Análisis de inventario, Reconstrucción de documentos, Ingeniería inversa, Reestructuración de código, Reestructuración de datos e Ingeniería progresiva.'},
+
+{id:71,tema:'t8',section:'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+q:'¿Qué es la Ingeniería Inversa en el contexto de la reingeniería?',
+opts:['El proceso de crear código a partir de especificaciones formales','Un proceso de análisis de un programa para crear una representación del mismo con un nivel de abstracción mayor que el código fuente','La traducción automática de código a otro lenguaje de programación','El proceso de eliminar código duplicado o redundante'],
+ans:1,
+exp:'La Ingeniería Inversa es el proceso de análisis de un programa para crear una representación del mismo con un nivel de abstracción mayor que el código fuente.'},
+
+{id:72,tema:'t8',section:'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+q:'¿Cuáles son los tres elementos interesantes para hacer Ingeniería Inversa?',
+opts:['Requisitos, Diseño y Código','Procesamiento, Interfaz de usuario y Estructuras de datos','Documentación, Tests y Métricas','Modelos, Patrones y Frameworks'],
+ans:1,
+exp:'Los tres elementos interesantes para hacer ingeniería inversa son: Procesamiento, Interfaz de usuario y Estructuras de datos.'},
+
+{id:73,tema:'t8',section:'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+q:'Al analizar el "Procesamiento" en ingeniería inversa, ¿en qué secciones se analizan los módulos del programa?',
+opts:['Entrada, proceso y salida','Preparación de datos, operación de datos y exportación de datos','Inicialización, ejecución y finalización','Validación, transformación y persistencia'],
+ans:1,
+exp:'Al analizar el procesamiento en ingeniería inversa, los módulos se analizan en: Sección de preparación de datos, Sección de operación de datos y Sección de exportación de datos.'},
+
+{id:74,tema:'t8',section:'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+q:'Para hacer ingeniería inversa de la Interfaz de Usuario, ¿qué tipo de diagrama UML es útil?',
+opts:['Diagrama de clases','Diagrama de estados / actividad','Diagrama de despliegue','Diagrama de paquetes'],
+ans:1,
+exp:'Para la ingeniería inversa de la interfaz de usuario se usan Diagramas de Estados / Actividad, ya que permiten determinar las acciones básicas y describir la respuesta del sistema a esas acciones.'},
+
+{id:75,tema:'t8',section:'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+q:'¿Cuáles son los dos tipos de estructuras de datos que se analizan en ingeniería inversa?',
+opts:['Relacionales y orientadas a objetos','Internas (programa) y externas (bases de datos)','Estáticas y dinámicas','Locales y remotas'],
+ans:1,
+exp:'Se analizan Estructuras internas (del programa): definir tipos abstractos para determinar las clases de objetos. Y Estructuras externas (bases de datos): estudiar la estructura actual y determinar si es adecuado construir una nueva base de datos.'},
+
+{id:76,tema:'t8',section:'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+q:'¿Cuáles son los beneficios de la reestructuración en la reingeniería?',
+opts:['Aumenta la complejidad y el número de módulos','Mayor calidad, mejor documentación, menor complejidad; mejora el aprendizaje, aumenta la productividad y reduce el esfuerzo en el mantenimiento','Permite mantener el código legacy sin modificaciones','Solo mejora el rendimiento del sistema sin afectar la mantenibilidad'],
+ans:1,
+exp:'La reestructuración aporta: Mayor calidad, mejor documentación y menor complejidad; mejora el aprendizaje y aumenta la productividad (más sencillo de comprobar y depurar); reduce el esfuerzo en el mantenimiento.'},
+
+{id:77,tema:'t8',section:'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+q:'¿Qué incluye la reestructuración de datos?',
+opts:['Solo la normalización de tablas en bases de datos relacionales','Análisis de datos y rediseño de datos (estandarización y/o racionalización)','Solo la migración de datos entre sistemas','La eliminación de datos duplicados exclusivamente'],
+ans:1,
+exp:'La reestructuración de datos incluye: Análisis de datos y Rediseño de datos (estandarización y/o racionalización).'},
+
+{id:78,tema:'t8',section:'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+q:'En la Ingeniería Progresiva para entornos cliente/servidor, ¿a qué modelo de capas se adapta?',
+opts:['Modelo de 2 capas (cliente-servidor básico)','Modelo de 3 capas','Modelo de 5 capas (microservicios)','Modelo monolítico actualizado'],
+ans:1,
+exp:'En la ingeniería progresiva para entornos cliente/servidor se requiere una adaptación al modelo de 3 capas, identificando los elementos que deben estar en el cliente y en el servidor.'},
+
+{id:79,tema:'t8',section:'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+q:'¿Cuáles son los pasos para cambiar a una nueva GUI en la Ingeniería Progresiva?',
+opts:['Diseñar, implementar, probar y desplegar','Comprender la interfaz original e intercambio de datos, remodelar comportamiento, introducir mejoras, construir e integrar la nueva GUI','Eliminar la interfaz antigua y crear una completamente nueva','Solo importar los componentes gráficos más modernos disponibles'],
+ans:1,
+exp:'Los pasos para cambiar a una nueva GUI en la Ingeniería Progresiva son: Comprender la interfaz original y el intercambio de datos → Remodelar el comportamiento aprovechando componentes gráficos → Introducir mejoras → Construir e integrar la nueva GUI.'},
+
+{id:80,tema:'t8',section:'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+q:'¿Qué analogía usa el Tema 8 para explicar la reingeniería?',
+opts:['El mantenimiento de un coche de carreras','La reconstrucción de una casa (inspeccionar, verificar estructura, entender arquitectura original, usar materiales modernos y reconstruir con calidad)','La renovación de un barco antiguo','El proceso de fundir y reformar piezas metálicas'],
+ans:1,
+exp:'El tema 8 compara la reingeniería con la reconstrucción de una casa: Inspeccionar la casa, Verificar la estructura, Entender la arquitectura original, Utilizar los materiales más modernos y Reconstruir con calidad.'}
+
+,
+// SIMULACRO PROFESORA — 30 preguntas reales de examen
+{id:81,tema:'prof',
+q:'Respecto a los Diagramas de Actividades... ¿Qué representa el tipo de flujo "Calles"?',
+opts:['Caminos alternativos en función de alguna condición.','Identificación de responsables de cada actividad.','Flujos de ejecución concurrentes.'],
+ans:1,
+exp:'Las Calles (swimlanes) son agrupaciones de flujos de procesos que identifican los responsables de cada actividad. Las transiciones pueden cruzarlas.'},
+
+{id:82,tema:'prof',
+q:'Respecto a los Eventos, ¿a qué hace referencia el concepto de "Evento de cambio"?',
+opts:['Representa un cambio de estado o el cumplimiento de alguna condición.','Implica, al menos, a dos objetos.','Representa un instante en el tiempo mediante una expresión.'],
+ans:0,
+exp:'El evento de cambio representa un cambio de estado o el cumplimiento de alguna condición. Su notación es When(expresión booleana).'},
+
+{id:83,tema:'prof',
+q:'¿Cómo se puede modelar la arquitectura de un sistema?',
+opts:['Mediante Diagramas de Estados y Diagramas de Actividades.','Mediante Diagramas de Estados, Actividades, Paquetes, Componentes y Despliegue.','Mediante Diagramas de Paquetes, Diagramas de Componentes y Diagramas de Despliegue.'],
+ans:2,
+exp:'La arquitectura se modela con Diagramas de Paquetes (lógico), de Componentes y de Despliegue (físico). Los diagramas de estados y actividades modelan el comportamiento, no la arquitectura.'},
+
+{id:84,tema:'prof',
+q:'Respecto a los Eventos, ¿a qué hace referencia el concepto de "Evento señal"?',
+opts:['Es de uso local en un objeto.','Representa la invocación de una operación de un objeto.','Permite el intercambio de objetos entre objetos.'],
+ans:2,
+exp:'El evento señal permite el intercambio de objetos entre objetos. El evento llamada (no señal) es el que representa la invocación de una operación de un objeto.'},
+
+{id:85,tema:'prof',
+q:'Respecto a los Diagramas de Paquetes... ¿Cómo interactúan los paquetes?',
+opts:[' Mediante "Generalización".','Mediante "Dependencia" (Exportación, Importación, Acceso).','Mediante "Generalización" o "Dependencia" (Exportación, Importación, Acceso).'],
+ans:2,
+exp:'Los paquetes interactúan de dos formas: Generalización (el hijo puede usarse en lugar del padre) y Dependencia con tres subtipos: Exportación (partes públicas), Importación y Acceso.'},
+
+{id:86,tema:'prof',
+q:'Respecto a los Diagramas de Actividades... ¿Qué representa el tipo de flujo "Bifurcación"?',
+opts:['Flujos de ejecución concurrentes.','Caminos alternativos en función de alguna condición.','Identificación de responsables de cada actividad.'],
+ans:1,
+exp:'La Bifurcación representa caminos alternativos en función de una expresión booleana. Se representa como un rombo con un flujo de entrada y dos o más de salida, cada uno con una guarda.'},
+
+{id:87,tema:'prof',
+q:'Respecto a los Diagramas de Actividades... ¿Qué representa un "Nodo de control"?',
+opts:['Son nodos de actividad atómicos.','Controlan el flujo, es decir, marcan los pasos de una acción/actividad a otra.','Son nodos de actividad con estructura interna, no atómicos.'],
+ans:1,
+exp:'Los Nodos de Control controlan el flujo, marcando los pasos entre acciones o nodos de actividad. Son uno de los cuatro componentes principales de un diagrama de actividades.'},
+
+{id:88,tema:'prof',
+q:'Respecto a los Eventos, ¿a qué hace referencia el concepto de "Evento de tiempo"?',
+opts:['Implica, al menos, a dos objetos.','Representa un cambio de estado o el cumplimiento de alguna condición.','Representa un instante en el tiempo mediante una expresión.'],
+ans:2,
+exp:'El evento de tiempo representa un instante en el tiempo. Puede ser absoluto at(21:00h) o relativo after(2 segundos).'},
+
+{id:89,tema:'prof',
+q:'¿Qué es la "Reingeniería del software"?',
+opts:['Mecanismo para evaluar, controlar y realizar modificaciones sobre aplicaciones "veteranas".','Solución probada que se puede aplicar con éxito a un determinado tipo de problemas que aparecen repetidamente.','Proceso que permite desarrollar un sistema a partir de algo procedente de algún esfuerzo de desarrollo anterior.'],
+ans:0,
+exp:'La Reingeniería es un mecanismo para evaluar, controlar y realizar modificaciones sobre aplicaciones "veteranas". La opción b describe un patrón de diseño; la c describe la Reutilización.'},
+
+{id:90,tema:'prof',
+q:'Respecto a las tareas principales de la Ingeniería del dominio, la "Construcción de componentes" consiste en...',
+opts:['Determinar características para clasificar dominios de aplicación, estableciendo qué elementos se pueden reutilizar.','Identificar las estructuras de datos estándar, los protocolos de interfaz y construir plantillas de programa.','Describir los componentes en términos no ambiguos y fáciles de clasificar, siguiendo el modelo 3C (Tracz).'],
+ans:1,
+exp:'La Construcción de componentes: identificar estructuras de datos estándar, protocolos de interfaz y construir plantillas de programa. La opción a es Análisis del dominio; la c es Clasificación y recuperación.'},
+
+{id:91,tema:'prof',
+q:'Respecto a los Diagramas de Paquetes... ¿Qué representa un "Paquete"?',
+opts:['Una agrupación lógica que organiza elementos de un modelado y controla el acceso a sus contenidos.','Una agrupación física que organiza elementos de un modelado y controla el acceso a sus contenidos.','Una agrupación lógica y física de elementos con identidad (pueden crearse instancias de paquetes).'],
+ans:0,
+exp:'Un Paquete es una agrupación LÓGICA que organiza elementos y controla el acceso. Importante: un paquete NO tiene identidad propia, no se pueden crear instancias de paquetes.'},
+
+{id:92,tema:'prof',
+q:'Respecto a los Diagramas de Componentes... ¿Qué es la "Interfaz requerida" de un Componente?',
+opts:['Ventana específica de un componente encapsulado, que acepta mensajes desde y hacia el componente.','Interfaz que puede ser usada por uno de sus componentes internos.','Interfaz que puede ser realizada por uno de sus componentes internos.'],
+ans:1,
+exp:'La Interfaz requerida es la que puede ser usada por uno de sus elementos internos. La Interfaz ofrecida es la que puede ser realizada por sus componentes internos. El puerto es la "ventana específica".'},
+
+{id:93,tema:'prof',
+q:'Una Máquina de estados...',
+opts:['No modela el comportamiento de un objeto.','Se utiliza para modelar el comportamiento de objetos no reactivos.','Es una secuencia de estados por las que pasa un objeto a lo largo de su vida como consecuencia de procesar eventos que recibe.'],
+ans:2,
+exp:'Una Máquina de estados es la secuencia de estados por los que pasa un objeto a lo largo de su vida como consecuencia de procesar los eventos que recibe. Son ideales para objetos reactivos.'},
+
+{id:94,tema:'prof',
+q:'Respecto a los Diagramas de Componentes... ¿Qué representa un "Componente"?',
+opts:['Elemento físico que representa un recurso hardware en el que puede residir el software ejecutable.','Ficheros físicos que el software usa o ejecuta; implementación física de un conjunto de elementos lógicos tales como clases.','Parte física de un sistema que conforma y proporciona la implementación de un conjunto de interfaces.'],
+ans:2,
+exp:'Un Componente es la parte física de un sistema que conforma y proporciona la implementación de un conjunto de interfaces (unidad reemplazable). La opción a describe un Nodo; la b un Artefacto.'},
+
+{id:95,tema:'prof',
+q:'Respecto a los Diagramas de Paquetes... ¿A qué hace referencia la relación entre paquetes conocida como "Dependencia"?',
+opts:['Algún elemento de un paquete depende de los elementos de otro paquete.','Este tipo de relación no existe.','El paquete especializado (hijo) hereda las propiedades del genérico (padre), sobreescribiendo su contenido.'],
+ans:0,
+exp:'La Dependencia indica que algún elemento de un paquete depende de los de otro. Incluye Exportación, Importación y Acceso. La opción c describe la Generalización.'},
+
+{id:96,tema:'prof',
+q:'¿Cómo se puede modelar el comportamiento de un sistema?',
+opts:['Mediante Diagramas de Estados, Actividades, Paquetes, Componentes y Despliegue.','Mediante Diagramas de Paquetes, Diagramas de Componentes y Diagramas de Despliegue.','Mediante Diagramas de Estados y Diagramas de Actividades.'],
+ans:2,
+exp:'El comportamiento se modela con Diagramas de Estados (orientados a eventos) y Diagramas de Actividades (orientados a actividades). Paquetes, componentes y despliegue modelan la arquitectura.'},
+
+{id:97,tema:'prof',
+q:'Respecto a los Diagramas de Despliegue... ¿Qué representa un "Artefacto"?',
+opts:['Elemento físico que representa un recurso hardware en el que puede residir el software ejecutable.','Ficheros físicos que el software usa o ejecuta; implementación física de un conjunto de elementos lógicos tales como clases.','Parte física de un sistema que conforma y proporciona la implementación de un conjunto de interfaces.'],
+ans:1,
+exp:'Un Artefacto son los ficheros físicos que el software usa o ejecuta. La opción a describe un Nodo; la c describe un Componente.'},
+
+{id:98,tema:'prof',
+q:'¿Qué es una actividad?',
+opts:['Ejecución no atómica dentro de una máquina de estados.','Condición o situación en la vida de un objeto.','Acontecimiento significativo, ubicado en el tiempo y en el espacio.'],
+ans:0,
+exp:'Una actividad es una ejecución NO atómica dentro de una máquina de estados. La opción b describe un Estado; la c describe un Evento.'},
+
+{id:99,tema:'prof',
+q:'Respecto a los Diagramas de Paquetes... ¿A qué hace referencia la relación de Dependencia conocida como "Exportación"?',
+opts:['Permite incorporar el namespace de un paquete a otro.','Permite acceder al namespace de un paquete desde otro, sin incorporar sus elementos.','Son partes públicas de un paquete que pueden ser usadas por otros paquetes.'],
+ans:2,
+exp:'La Exportación son las partes públicas de un paquete que pueden ser usadas por otros. La opción a describe la Importación; la b describe el Acceso.'},
+
+{id:100,tema:'prof',
+q:'Respecto a los Diagramas de Paquetes... ¿A qué hace referencia la relación entre paquetes conocida como "Generalización"?',
+opts:['Este tipo de relación no existe.','Algún elemento de un paquete depende de los elementos de otro paquete.','El paquete especializado (hijo) hereda las propiedades del genérico (padre), sobreescribiendo su contenido.'],
+ans:2,
+exp:'La Generalización indica que el paquete hijo puede usarse en sustitución del padre. Hereda los contenidos públicos y protegidos del padre y puede sobrescribir su contenido.'},
+
+{id:101,tema:'prof',
+q:'Respecto a los Patrones de Diseño Software, los Patrones de Clase...',
+opts:['No se basan en la herencia.','Se basan en la herencia.','Se basan en la composición.'],
+ans:1,
+exp:'Los Patrones de Clase se basan en la herencia (relación fija, reuso "caja blanca"). Los Patrones de Objeto se basan en la composición (relación variable, reuso "caja negra").'},
+
+{id:102,tema:'prof',
+q:'Respecto a los Patrones de Diseño Software, los Patrones de Comportamiento...',
+opts:['Definen cómo clases y objetos se combinan para formar estructuras más complejas.','Abstraen el proceso de creación de objetos.','Enfatizan la colaboración entre objetos.'],
+ans:2,
+exp:'Los Patrones de Comportamiento enfatizan la colaboración entre objetos y están relacionados con la asignación de responsabilidades. Caracterizan flujos de control (Observer, Mediator...).'},
+
+{id:103,tema:'prof',
+q:'Respecto a los Diagramas de Actividades... ¿Qué representa un "Nodo de acción"?',
+opts:['Son nodos de actividad atómicos.','Son nodos de actividad con estructura interna, no atómicos.','Controlan el flujo, es decir, marcan los pasos de una acción/actividad a otra.'],
+ans:0,
+exp:'Un Nodo de acción representa nodos de actividad ATÓMICOS. Los Nodos de actividad (actividades) son no atómicos con estructura interna; los Nodos de control marcan los pasos.'},
+
+{id:104,tema:'prof',
+q:'Respecto a los Patrones de Diseño Software, los Patrones de Estructura...',
+opts:['Enfatizan la colaboración entre objetos.','Definen cómo clases y objetos se combinan para formar estructuras más complejas.','Abstraen el proceso de creación de objetos.'],
+ans:1,
+exp:'Los Patrones de Estructura definen cómo clases y objetos se combinan para formar estructuras más complejas, basándose en herencia (para componer interfaces) o composición (para combinar objetos).'},
+
+{id:105,tema:'prof',
+q:'Respecto al Proceso de reingeniería, la "Ingeniería inversa" es...',
+opts:['Proceso de análisis de un programa para crear una representación del mismo con un nivel de abstracción mayor que el código fuente.','Proceso metodológico que se basa en la construcción gradual y evolutiva de un programa, a partir de otro ya existente.','Proceso de modificar el diseño, arquitectura o código para mejorar su mantenibilidad, escalabilidad o rendimiento.'],
+ans:0,
+exp:'La Ingeniería inversa es el proceso de análisis de un programa para crear una representación del mismo con un nivel de abstracción mayor que el código fuente. La opción c describe la Reestructuración; la b la Ingeniería progresiva.'},
+
+{id:106,tema:'prof',
+q:'Respecto a los Diagramas de Despliegue... ¿Qué es una "Especificación de Despliegue"?',
+opts:['Propiedades que describen cómo se despliega un artefacto en un nodo, para que funcione adecuadamente en su entorno.','Este concepto no existe.','Es un diagrama que muestra nodos (dispositivos en tiempo de ejecución), sus relaciones y los artefactos que residen en ellos.'],
+ans:0,
+exp:'La Especificación de Despliegue son las propiedades que describen cómo se despliega un artefacto en un nodo para que funcione en su entorno.'},
+
+{id:107,tema:'prof',
+q:'Respecto a los Patrones de Diseño Software, los Patrones de Creación...',
+opts:['Abstraen el proceso de creación de objetos.','Enfatizan la colaboración entre objetos.','Definen cómo clases y objetos se combinan para formar estructuras más complejas.'],
+ans:0,
+exp:'Los Patrones de Creación abstraen el proceso de creación de objetos, ayudando a crear sistemas independientes de cómo los objetos son creados, compuestos y representados.'},
+
+{id:108,tema:'prof',
+q:'Respecto a los Eventos, ¿a qué hace referencia el concepto de "Evento llamada"?',
+opts:['Es de uso local en un objeto.','Representa la invocación de una operación de un objeto.','Permite el intercambio de objetos entre objetos.'],
+ans:1,
+exp:'El Evento llamada representa la invocación de una operación de un objeto. Suele ser síncrono. Sus casos especiales son la creación y destrucción de un objeto.'},
+
+{id:109,tema:'prof',
+q:'¿Qué es la "Reutilización del software"?',
+opts:['Solución probada que se puede aplicar con éxito a un determinado tipo de problemas que aparecen repetidamente.','Mecanismo para evaluar, controlar y realizar modificaciones sobre aplicaciones "veteranas".','Proceso que permite desarrollar un sistema a partir de algo procedente de algún esfuerzo de desarrollo anterior.'],
+ans:2,
+exp:'La Reutilización es el proceso que permite desarrollar un sistema a partir de algo procedente de algún esfuerzo de desarrollo anterior. La opción a describe un patrón; la b la Reingeniería.'},
+
+{id:110,tema:'prof',
+q:'Respecto a los Diagramas de Paquetes... ¿A qué hace referencia la relación de Dependencia conocida como "Acceso"?',
+opts:['Permite acceder al namespace de un paquete desde otro, sin incorporar sus elementos.','Permite incorporar el namespace de un paquete a otro.','Son partes públicas de un paquete que pueden ser usadas por otros paquetes.'],
+ans:0,
+exp:'El Acceso permite acceder al namespace de un paquete sin incorporar sus elementos (hay que cualificar nombres). La opción b describe la Importación; la c describe la Exportación.'}
+
+];
+
+// ── State ──
+let answered = {}, showSols = false, currentFilter = 'all';
+let questionOrder = QUESTIONS.map(q => q.id);
+// shuffledOpts[qid] = array of {text, origIndex} — persists until reset or reshuffle
+let shuffledOpts = {};
+
+function buildShuffledOpts() {
+  shuffledOpts = {};
+  QUESTIONS.forEach(q => {
+    const arr = q.opts.map((text, i) => ({ text, origIndex: i }));
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    shuffledOpts[q.id] = arr;
+  });
+}
+
+function shuffleAnswers() {
+  buildShuffledOpts();
+  renderQuiz();
+}
+
+function getStats() {
+  let total = QUESTIONS.length, ans = 0, correct = 0, wrong = 0;
+  for (let id in answered) { ans++; if (answered[id].correct) correct++; else wrong++; }
+  return { total, ans, correct, wrong, pct: ans ? Math.round(correct/ans*100) : 0 };
+}
+
+function updateStats() {
+  const s = getStats();
+  document.getElementById('stat-answered').textContent = s.ans;
+  document.getElementById('stat-correct').textContent = s.correct;
+  document.getElementById('stat-wrong').textContent = s.wrong;
+  document.getElementById('stat-pct').textContent = s.pct + '%';
+  document.getElementById('progress-fill').style.width = (s.ans/s.total*100) + '%';
+}
+
+function renderQuiz() {
+  const container = document.getElementById('quiz-container');
+  container.innerHTML = '';
+  let lastSection = null;
+  const sections = {
+    't5': 'TEMA 5 — MODELADO DE COMPORTAMIENTO',
+    't6': 'TEMA 6 — MODELADO DE ARQUITECTURA',
+    't7': 'TEMA 7 — PATRONES DE DISEÑO SOFTWARE (Introducción)',
+    't8': 'TEMA 8 — REUTILIZACIÓN Y REINGENIERÍA',
+    'prof': 'SIMULACRO PROFESORA — Preguntas reales de examen'
+  };
+  let visibleIndex = 1;
+
+  questionOrder.forEach(qid => {
+    const q = QUESTIONS.find(x => x.id === qid);
+    if (currentFilter !== 'all' && q.tema !== currentFilter) return;
+    if (q.tema !== lastSection) {
+      lastSection = q.tema;
+      const sh = document.createElement('div');
+      sh.className = 'section-header';
+      sh.innerHTML = '<span>' + sections[q.tema] + '</span>';
+      container.appendChild(sh);
+    }
+    const state = answered[q.id];
+    const card = document.createElement('div');
+    card.className = 'question-card' + (state ? (state.correct ? ' answered-correct' : ' answered-wrong') : '');
+    card.dataset.tema = q.tema;
+    card.id = 'q-' + q.id;
+
+    const tagClass = 'tag-' + q.tema;
+    const tagLabel = q.tema === 't5' ? 'Tema 5' : q.tema === 't6' ? 'Tema 6' : q.tema === 't7' ? 'Tema 7' : q.tema === 't8' ? 'Tema 8' : 'Profesora';
+    const statusIcon = state ? (state.correct ? '✅' : '❌') : '';
+
+    const opts = shuffledOpts[q.id] || q.opts.map((text, i) => ({ text, origIndex: i }));
+    let optsHTML = opts.map((opt, displayIdx) => {
+      const origI = opt.origIndex;
+      let cls = 'option';
+      if (state) {
+        cls += ' disabled';
+        if (origI === q.ans) cls += ' correct';
+        else if (state.chosen === origI && !state.correct) cls += ' wrong';
+      } else if (showSols && origI === q.ans) {
+        cls += ' reveal-correct';
+      }
+      return `<div class="${cls}" onclick="selectOption(${q.id},${origI})">
+        <span class="opt-letter">${'abcd'[displayIdx]}</span>
+        <span>${opt.text}</span>
+      </div>`;
+    }).join('');
+
+    let expHTML = '';
+    if (q.exp) {
+      expHTML = `<div class="explanation${(state || showSols) ? ' visible' : ''}" id="exp-${q.id}">
+        <strong>📌 Explicación:</strong> ${q.exp}
+      </div>`;
+    }
+
+    card.innerHTML = `
+      <div class="q-meta">
+        <div class="q-num">#${visibleIndex}</div>
+        <div class="q-tag ${tagClass}">${tagLabel}</div>
+        <div class="q-status-icon">${statusIcon}</div>
+      </div>
+      <div class="q-text">${q.q}</div>
+      <div class="options">${optsHTML}</div>
+      ${expHTML}
+    `;
+    container.appendChild(card);
+    visibleIndex++;
+  });
+}
+
+function selectOption(qid, chosen) {
+  if (answered[qid]) return;
+  const q = QUESTIONS.find(x => x.id === qid);
+  const correct = chosen === q.ans;
+  answered[qid] = { chosen, correct };
+  updateStats();
+  renderQuiz();
+  document.getElementById('q-' + qid).scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function filterBy(tema, btn) {
+  currentFilter = tema;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderQuiz();
+}
+
+function toggleSolutions() {
+  showSols = !showSols;
+  const btn = document.getElementById('btn-sol');
+  btn.classList.toggle('active', showSols);
+  btn.textContent = showSols ? '🙈 Ocultar soluciones' : '👁 Mostrar soluciones';
+  renderQuiz();
+}
+
+function shuffleQuestions() {
+  for (let i = questionOrder.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [questionOrder[i], questionOrder[j]] = [questionOrder[j], questionOrder[i]];
+  }
+  renderQuiz();
+}
+
+function resetAll() {
+  if (!confirm('¿Reiniciar todas las respuestas?')) return;
+  answered = {};
+  showSols = false;
+  questionOrder = QUESTIONS.map(q => q.id);
+  shuffledOpts = {};
+  document.getElementById('btn-sol').classList.remove('active');
+  document.getElementById('btn-sol').textContent = '👁 Mostrar soluciones';
+  updateStats();
+  renderQuiz();
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+
+// Init
+updateStats();
+renderQuiz();
+</script>
+</body>
+</html>
